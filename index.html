@@ -755,12 +755,24 @@
 
       const catalogDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'master');
       unsubCatalog = onSnapshot(catalogDocRef, (snapshot) => {
-        if (snapshot.exists() && snapshot.data().items) {
-          window.mealsCatalog = snapshot.data().items;
+        let loadedItems = [];
+        if (snapshot.exists() && snapshot.data().items && snapshot.data().items.length > 0) {
+          loadedItems = snapshot.data().items;
         } else {
-          window.mealsCatalog = JSON.parse(JSON.stringify(DEFAULT_MEALS));
-          saveCatalogToCloud();
+          loadedItems = JSON.parse(JSON.stringify(DEFAULT_MEALS));
         }
+
+        // Ensure all default meals are present (merge by ID or Name)
+        DEFAULT_MEALS.forEach(defaultMeal => {
+          const exists = loadedItems.some(item => item.id === defaultMeal.id || item.name.toLowerCase() === defaultMeal.name.toLowerCase());
+          if (!exists) {
+            loadedItems.push(defaultMeal);
+          }
+        });
+
+        window.mealsCatalog = loadedItems;
+        saveCatalogToCloud();
+        
         renderCatalog();
         renderPlanner();
         renderRecommendations();
@@ -825,7 +837,16 @@
 
     function loadFallbackLocalState() {
       const storedCatalog = localStorage.getItem('nourish_meals_catalog');
-      window.mealsCatalog = storedCatalog ? JSON.parse(storedCatalog) : JSON.parse(JSON.stringify(DEFAULT_MEALS));
+      let loadedItems = storedCatalog ? JSON.parse(storedCatalog) : JSON.parse(JSON.stringify(DEFAULT_MEALS));
+      
+      DEFAULT_MEALS.forEach(defaultMeal => {
+        const exists = loadedItems.some(item => item.id === defaultMeal.id || item.name.toLowerCase() === defaultMeal.name.toLowerCase());
+        if (!exists) {
+          loadedItems.push(defaultMeal);
+        }
+      });
+
+      window.mealsCatalog = loadedItems;
       
       const storedSched = localStorage.getItem(`nourish_schedule_${window.currentWeekKey}`);
       window.weeklySchedule = storedSched ? JSON.parse(storedSched) : JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
