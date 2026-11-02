@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nourish Family Meal Planner</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-16">
+
+  <!-- TOP HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-orange-200">
+          <i class="fa-solid fa-utensils text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-slate-900 tracking-tight">Nourish</h1>
+          <p class="text-xs font-semibold text-slate-400">Weekly Family Planner & Grocery Sync</p>
+        </div>
+      </div>
+
+      <!-- NAVIGATION TABS -->
+      <nav class="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
+        <button id="tab-btn-planner" onclick="switchTab('planner')" class="nav-tab active px-3.5 py-2 rounded-lg transition bg-white text-slate-900 shadow-sm flex items-center gap-2">
+          <i class="fa-solid fa-calendar-days text-orange-500"></i> Weekly Plan
+        </button>
+        <button id="tab-btn-lunch" onclick="switchTab('lunch')" class="nav-tab px-3.5 py-2 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cookie-bite text-amber-500"></i> School Lunch
+        </button>
+        <button id="tab-btn-grocery" onclick="switchTab('grocery')" class="nav-tab px-3.5 py-2 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cart-shopping text-emerald-600"></i> H-E-B Grocery <span id="grocery-count-badge" class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full text-[10px]">0</span>
+        </button>
+        <button id="tab-btn-catalog" onclick="switchTab('catalog')" class="nav-tab px-3.5 py-2 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-book-open text-sky-500"></i> Meals Catalog
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+    <!-- VIEW 1: WEEKLY PLANNER -->
+    <section id="view-planner" class="view-panel space-y-6">
+      
+      <!-- CONTROLS & DATE SELECTOR -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3 w-full md:w-auto">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-extrabold uppercase text-slate-400 tracking-wider">Week Of:</span>
+            <input type="date" id="week-start-date" onchange="handleWeekDateChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+          <span class="text-xs text-slate-400 font-medium hidden sm:inline">• Weeks start on Sunday</span>
+        </div>
+
+        <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+          <button onclick="clearCurrentWeek()" class="text-xs font-bold text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate-left"></i> Reset Week
+          </button>
+          <button onclick="switchTab('grocery')" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-cart-shopping"></i> View Grocery List
+          </button>
+        </div>
+      </div>
+
+      <!-- 7-DAY SCHEDULE GRID -->
+      <div id="weekly-days-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+
+      <!-- MEAL RECOMMENDATIONS / SPIN-OFFS SECTION -->
+      <div class="bg-slate-100/70 p-5 rounded-2xl border border-slate-200/60 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Meal Ideas & Spin-offs
+            </h3>
+            <p class="text-xs text-slate-500">Quick recommendations based on your family's favorite meals.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="space-y-2">
+            <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider">Past Family Favorites</h4>
+            <div id="rec-comfort-list" class="space-y-2"></div>
+          </div>
+          <div class="space-y-2">
+            <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider">Inspired Spin-offs</h4>
+            <div id="rec-spinoffs-list" class="space-y-2"></div>
+          </div>
+          <div class="space-y-2">
+            <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider">Quick Under 25 Min</h4>
+            <div id="rec-quick-list" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: DAUGHTER'S SCHOOL LUNCH PLANNER -->
+    <section id="view-lunch" class="view-panel hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <h2 class="font-extrabold text-slate-900 text-lg">Daughter's School Lunch Planner 🍱</h2>
+          <p class="text-xs text-slate-500">Plan weekday lunches and flag dinner leftovers to auto-sync with your H-E-B list.</p>
+        </div>
+      </div>
+
+      <div id="lunch-days-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </section>
+
+    <!-- VIEW 3: H-E-B GROCERY LIST -->
+    <section id="view-grocery" class="view-panel hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+            <i class="fa-solid fa-basket-shopping text-emerald-600"></i> H-E-B Store Flow Grocery List
+          </h2>
+          <p class="text-xs text-slate-500">Sorted sequentially by store section for efficient shopping.</p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="openCustomGroceryModal()" class="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl transition">
+            + Custom Item
+          </button>
+          <button onclick="clearCheckedGrocery()" class="text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3 py-2 rounded-xl transition">
+            Uncheck All
+          </button>
+          <button onclick="printGroceryList()" class="text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 px-3.5 py-2 rounded-xl transition">
+            <i class="fa-solid fa-print mr-1"></i> Print
+          </button>
+        </div>
+      </div>
+
+      <div id="grocery-aisles-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </section>
+
+    <!-- VIEW 4: MEALS CATALOG -->
+    <section id="view-catalog" class="view-panel hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="font-extrabold text-slate-900 text-lg">Family Meals & Recipe Catalog</h2>
+          <p class="text-xs text-slate-500">Manage your go-to family recipes and customizable ingredients.</p>
+        </div>
+
+        <button onclick="openMealModal()" class="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-4 py-2.5 rounded-xl transition shadow-sm">
+          + Add New Recipe
+        </button>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search recipes or ingredients..." class="bg-white border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <select id="catalog-filter-category" onchange="renderCatalog()" class="bg-white border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="ALL">All Categories</option>
+          <option value="Chicken & Bowls">Chicken & Bowls</option>
+          <option value="Mexican">Mexican</option>
+          <option value="Pasta">Pasta</option>
+          <option value="Beef & Pork">Beef & Pork</option>
+          <option value="Quick & Easy">Quick & Easy</option>
+          <option value="Soup">Soup</option>
+        </select>
+        <select id="catalog-filter-kid" onchange="renderCatalog()" class="bg-white border border-slate-200 text-xs rounded-xl px-3.5 py-2.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <option value="ALL">All Picky Approval Levels</option>
+          <option value="High">⭐ High Approval (Picky Approved)</option>
+          <option value="Medium">Medium Approval</option>
+          <option value="Selective/Customizable">Selective / Customizable</option>
+        </select>
+      </div>
+
+      <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ASSIGN MEAL TO DAY -->
+  <div id="modal-assign" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 id="assign-modal-day-title" class="font-extrabold text-slate-900 text-base">Select Dinner</h3>
+        <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <input type="text" id="assign-modal-search" oninput="filterAssignMeals()" placeholder="Search meals..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+
+      <div id="assign-modal-list" class="space-y-2 overflow-y-auto flex-1 pr-1">
+        <!-- List rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT RECIPE CATALOG -->
+  <div id="modal-meal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 id="modal-meal-title" class="font-extrabold text-slate-900 text-base">Edit Recipe & Ingredients</h3>
+        <button onclick="closeMealModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="meal-edit-id">
+
+      <div class="space-y-3 overflow-y-auto flex-1 pr-1">
+        <div>
+          <label class="text-xs font-bold text-slate-500 block mb-1">Recipe Name</label>
+          <input type="text" id="meal-input-name" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-500 block mb-1">Category</label>
+            <select id="meal-input-category" class="w-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2">
+              <option value="Chicken & Bowls">Chicken & Bowls</option>
+              <option value="Mexican">Mexican</option>
+              <option value="Pasta">Pasta</option>
+              <option value="Beef & Pork">Beef & Pork</option>
+              <option value="Quick & Easy">Quick & Easy</option>
+              <option value="Soup">Soup</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500 block mb-1">Picky Approval</label>
+            <select id="meal-input-kid" class="w-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2">
+              <option value="High">⭐ High (Picky Approved)</option>
+              <option value="Medium">Medium Approval</option>
+              <option value="Selective/Customizable">Selective / Customizable</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-500 block mb-1">Prep Time</label>
+            <input type="text" id="meal-input-time" placeholder="25 mins" class="w-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500 block mb-1">Notes</label>
+            <input type="text" id="meal-input-notes" placeholder="Serving tip or note..." class="w-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-extrabold text-slate-700">Ingredients (Synced to H-E-B List)</label>
+            <button type="button" onclick="addIngredientRow()" class="text-[11px] font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 px-2.5 py-1 rounded-lg transition">
+              + Add Ingredient
+            </button>
+          </div>
+          <div id="modal-ingredients-container" class="space-y-2">
+            <!-- Ingredient rows rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+        <button id="modal-meal-delete-btn" onclick="deleteCurrentMeal()" type="button" class="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-2 rounded-xl transition">
+          Delete Recipe
+        </button>
+        <div class="flex items-center space-x-2">
+          <button onclick="closeMealModal()" type="button" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl transition">
+            Cancel
+          </button>
+          <button onclick="saveMealFromModal()" type="button" class="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-xl transition shadow-sm">
+            Save Recipe
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CUSTOM GROCERY ITEM -->
+  <div id="modal-custom-grocery" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 class="font-extrabold text-slate-900 text-base">Add Custom Grocery Item</h3>
+        <button onclick="closeCustomGroceryModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-500 block mb-1">Item Name</label>
+          <input type="text" id="custom-grocery-name" placeholder="e.g. Paper Towels" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-500 block mb-1">H-E-B Store Section</label>
+          <select id="custom-grocery-category" class="w-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2"></select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+        <button onclick="closeCustomGroceryModal()" type="button" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl transition">
+          Cancel
+        </button>
+        <button onclick="addCustomGroceryItem()" type="button" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl transition shadow-sm">
+          Add to List
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC WITH DUAL PERSISTENCE (CLOUD & LOCALSTORAGE) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- FIREBASE INITIALIZATION & CONFIG ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'nourish-meal-planner-app';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "demo-api-key",
+      authDomain: "demo-app.firebaseapp.com",
+      projectId: "demo-app",
+      storageBucket: "demo-app.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:demo"
+    };
+
+    let app, auth, db;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase initialization skipped, running with local storage fallback.");
+    }
+
+    let currentUser = null;
+    let unsubCatalog = null;
+    let unsubSchedule = null;
+
+    // --- INITIAL SEED DATA ---
+    const SIDE_SALAD_INGREDIENTS = [
+      { name: "Fresh Romaine Lettuce", amount: "1-2 heads", category: "Produce" },
+      { name: "Fresh Tomatoes", amount: "3-4 count", category: "Produce" },
+      { name: "Red Onion", amount: "1 whole", category: "Produce" }
+    ];
+
+    const DEFAULT_MEALS = [
+      {
+        id: "m_pizza",
+        name: "Pizza Night",
+        category: "Quick & Easy",
+        kidApproval: "High",
+        prepTime: "15 mins",
+        notes: "Saturday staple! Order delivery or bake frozen/homemade pizza.",
+        isPastFavorite: true,
+        ingredients: [{ name: "Takeout Pizza or Frozen Pizza", amount: "2 large", category: "Frozen" }]
+      },
+      {
+        id: "m_takeout",
+        name: "Take Out / Restaurant",
+        category: "Takeout/Out",
+        kidApproval: "High",
+        prepTime: "0 mins",
+        notes: "Sunday night tradition! Panda Express, Chili's, or local spot.",
+        isPastFavorite: true,
+        ingredients: []
+      },
+      {
+        id: "m1",
+        name: "Chicken Bowls / Taco Bowls",
+        category: "Chicken & Bowls",
+        kidApproval: "High",
+        prepTime: "25 mins",
+        notes: "Great for customization! Daughter can keep ingredients separate.",
+        isPastFavorite: true,
+        ingredients: [
+          { name: "Chicken Breasts", amount: "1.5 lbs", category: "Meat & Seafood" },
+          { name: "White or Brown Rice", amount: "2 cups", category: "Pantry & Spices" },
+          { name: "Black Beans", amount: "1 can", category: "Pantry & Spices" },
+          { name: "Shredded Cheddar Cheese", amount: "1 bag", category: "Dairy & Refrigerated" },
+          { name: "Salsa / Pico de Gallo", amount: "1 jar", category: "Produce" },
+          { name: "Avocado", amount: "2", category: "Produce" }
+        ]
+      },
+      {
+        id: "m2",
+        name: "Taco Bowls / Tacos",
+        category: "Mexican",
+        kidApproval: "High",
+        prepTime: "20 mins",
+        notes: "Use ground beef or turkey. Tortillas or tortilla chips on side.",
+        isPastFavorite: true,
+        ingredients: [
+          { name: "Ground Beef", amount: "1.5 lbs", category: "Meat & Seafood" },
+          { name: "Taco Seasoning", amount: "1 packet", category: "Pantry & Spices" },
+          { name: "Taco Shells / Tortillas", amount: "1 pack", category: "Pantry & Spices" },
+          { name: "Shredded Mexican Cheese", amount: "1 bag", category: "Dairy & Refrigerated" },
+          { name: "Sour Cream", amount: "1 tub", category: "Dairy & Refrigerated" }
+        ]
+      },
+      {
+        id: "m3",
+        name: "Ravioli & Salad",
+        category: "Pasta",
+        kidApproval: "High",
+        prepTime: "15 mins",
+        notes: "Super fast night meal! Serve plain buttered ravioli for daughter if desired.",
+        isPastFavorite: true,
+        ingredients: [
+          { name: "Refrigerated Cheese Ravioli", amount: "2 packs", category: "Dairy & Refrigerated" },
+          { name: "Marinara Sauce", amount: "1 jar", category: "Pantry & Spices" },
+          { name: "Bagged Italian Salad", amount: "1 bag", category: "Produce" },
+          { name: "Garlic Bread", amount: "1 loaf", category: "Bakery" }
+        ]
+      },
+      {
+        id: "m4",
+        name: "Spaghetti & Meatballs",
+        category: "Pasta",
+        kidApproval: "High",
+        prepTime: "25 mins",
+        notes: "Classic hit. Keep meatballs separate for picky eaters.",
+        isPastFavorite: true,
+        ingredients: [
+          { name: "Spaghetti Pasta", amount: "1 lb", category: "Pantry & Spices" },
+          { name: "Frozen Meatballs", amount: "1 bag", category: "Frozen" },
+          { name: "Marinara Sauce", amount: "1 jar", category: "Pantry & Spices" },
+          { name: "Parmesan Cheese", amount: "1 wedge", category: "Dairy & Refrigerated" }
+        ]
+      },
+      {
+        id: "m5",
+        name: "Lemon Chicken & Roasted Potatoes",
+        category: "Chicken & Bowls",
+        kidApproval: "Medium",
+        prepTime: "40 mins",
+        notes: "Roast extra potatoes for easy side dish.",
+        isPastFavorite: true,
+        ingredients: [
+          { name: "Chicken Thighs / Breasts", amount: "2 lbs", category: "Meat & Seafood" },
+          { name: "Yukon Gold Potatoes", amount: "2 lbs", category: "Produce" },
+          { name: "Fresh Lemons", amount: "3", category: "Produce" },
+          { name: "Olive Oil & Herbs", amount: "Pantry", category: "Pantry & Spices" }
+        ]
+      },
+      {
+        id: "m13",
+        name: "Teriyaki Chicken Bowls",
+        category: "Chicken & Bowls",
+        kidApproval: "High",
+        prepTime: "20 mins",
+        notes: "Inspired Spin-off of Chicken Bowls! Sweet teriyaki glaze kids love.",
+        isSpinOff: true,
+        inspiredBy: "Chicken Bowls / Taco Bowls",
+        ingredients: [
+          { name: "Chicken Breasts / Thighs", amount: "1.5 lbs", category: "Meat & Seafood" },
+          { name: "Teriyaki Sauce", amount: "1 bottle", category: "Pantry & Spices" },
+          { name: "Steamed Edamame", amount: "1 bag", category: "Frozen" },
+          { name: "Jasmine Rice", amount: "2 cups", category: "Pantry & Spices" }
+        ]
+      }
+    ];
+
+    const DEFAULT_SCHEDULE_TEMPLATE = [
+      { day: "Sunday", dateStr: "", mealId: "m_takeout", note: "Sunday Take Out", scottHome: true, includeSalad: false, isLeftover: false },
+      { day: "Monday", dateStr: "", mealId: "m1", note: "Orchestra Night", scottHome: true, includeSalad: true, isLeftover: false },
+      { day: "Tuesday", dateStr: "", mealId: "m2", note: "", scottHome: false, includeSalad: true, isLeftover: false },
+      { day: "Wednesday", dateStr: "", mealId: "m3", note: "", scottHome: false, includeSalad: true, isLeftover: false },
+      { day: "Thursday", dateStr: "", mealId: "m13", note: "", scottHome: false, includeSalad: true, isLeftover: false },
+      { day: "Friday", dateStr: "", mealId: "m4", note: "Family Dinner", scottHome: true, includeSalad: true, isLeftover: false },
+      { day: "Saturday", dateStr: "", mealId: "m_pizza", note: "Saturday Pizza Night!", scottHome: true, includeSalad: false, isLeftover: false }
+    ];
+
+    const DEFAULT_LUNCH_SCHEDULE = [
+      { day: "Monday", main: "Turkey Sandwich", bread: "Sandwich Bread", toppings: ["Lettuce", "Tomato"], condiments: ["Mayo", "Mustard"], fruit: "Sliced Apples", snack: "Goldfish", isLeftover: false },
+      { day: "Tuesday", main: "Turkey Sandwich", bread: "Sandwich Bread", toppings: ["Lettuce", "Tomato"], condiments: ["Mayo", "Mustard"], fruit: "Strawberries", snack: "Pretzels", isLeftover: false },
+      { day: "Wednesday", main: "Turkey Sandwich", bread: "Sandwich Bread", toppings: ["Lettuce", "Tomato"], condiments: ["Mayo", "Mustard"], fruit: "Grapes", snack: "Granola Bar", isLeftover: false },
+      { day: "Thursday", main: "Turkey Sandwich", bread: "Sandwich Bread", toppings: ["Lettuce", "Tomato"], condiments: ["Mayo", "Mustard"], fruit: "Sliced Apples", snack: "Goldfish", isLeftover: false },
+      { day: "Friday", main: "Turkey Sandwich", bread: "Sandwich Bread", toppings: ["Lettuce", "Tomato"], condiments: ["Mayo", "Mustard"], fruit: "Strawberries", snack: "Chips", isLeftover: false }
+    ];
+
+    // Global App State
+    window.mealsCatalog = [];
+    window.weeklySchedule = [];
+    window.lunchSchedule = [];
+    window.customGroceryItems = [];
+    window.groceryCheckedMap = {};
+    window.activeDayIndexForAssign = null;
+    window.currentWeekKey = "";
+
+    // --- AUTH & DATA INITIALIZATION ---
+    async function initAuthAndData() {
+      setupDates();
+
+      if (auth) {
+        const initToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        try {
+          if (initToken) {
+            await signInWithCustomToken(auth, initToken);
+          } else {
+            await signInAnonymously(auth);
+          }
+        } catch (err) {
+          console.warn("Auth init warning:", err);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+          currentUser = user;
+          if (user) {
+            subscribeToCloudData();
+          } else {
+            loadFallbackLocalState();
+          }
+        });
+      } else {
+        loadFallbackLocalState();
+      }
+    }
+
+    function subscribeToCloudData() {
+      if (!currentUser || !db) return;
+
+      const catalogDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'master');
+      unsubCatalog = onSnapshot(catalogDocRef, (snapshot) => {
+        if (snapshot.exists() && snapshot.data().items) {
+          window.mealsCatalog = snapshot.data().items;
+        } else {
+          window.mealsCatalog = JSON.parse(JSON.stringify(DEFAULT_MEALS));
+          saveCatalogToCloud();
+        }
+        renderCatalog();
+        renderPlanner();
+        renderRecommendations();
+      }, (error) => {
+        console.warn("Snapshot error catalog:", error);
+        loadFallbackLocalState();
+      });
+
+      subscribeToWeekData(window.currentWeekKey);
+    }
+
+    function subscribeToWeekData(weekKey) {
+      if (!currentUser || !weekKey || !db) return;
+      if (unsubSchedule) unsubSchedule();
+
+      const weekDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', weekKey);
+      unsubSchedule = onSnapshot(weekDocRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          window.weeklySchedule = data.weeklySchedule || JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
+          window.lunchSchedule = data.lunchSchedule || JSON.parse(JSON.stringify(DEFAULT_LUNCH_SCHEDULE));
+          window.customGroceryItems = data.customGroceryItems || [];
+          window.groceryCheckedMap = data.groceryCheckedMap || {};
+        } else {
+          window.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
+          window.lunchSchedule = JSON.parse(JSON.stringify(DEFAULT_LUNCH_SCHEDULE));
+          window.customGroceryItems = [];
+          window.groceryCheckedMap = {};
+          saveWeekToCloud();
+        }
+        updateScheduleDateStrings(weekKey);
+        renderPlanner();
+        renderLunchPlanner();
+        renderGroceryList();
+        renderRecommendations();
+      }, (error) => {
+        console.warn("Snapshot error schedule:", error);
+      });
+    }
+
+    async function saveCatalogToCloud() {
+      if (!currentUser || !db) return;
+      const catalogDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'master');
+      try {
+        await setDoc(catalogDocRef, { items: window.mealsCatalog }, { merge: true });
+      } catch (err) {}
+    }
+
+    async function saveWeekToCloud() {
+      if (!currentUser || !window.currentWeekKey || !db) return;
+      const weekDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'schedules', window.currentWeekKey);
+      try {
+        await setDoc(weekDocRef, {
+          weeklySchedule: window.weeklySchedule,
+          lunchSchedule: window.lunchSchedule,
+          customGroceryItems: window.customGroceryItems,
+          groceryCheckedMap: window.groceryCheckedMap,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (err) {}
+    }
+
+    function loadFallbackLocalState() {
+      const storedCatalog = localStorage.getItem('nourish_meals_catalog');
+      window.mealsCatalog = storedCatalog ? JSON.parse(storedCatalog) : JSON.parse(JSON.stringify(DEFAULT_MEALS));
+      
+      const storedSched = localStorage.getItem(`nourish_schedule_${window.currentWeekKey}`);
+      window.weeklySchedule = storedSched ? JSON.parse(storedSched) : JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
+      
+      const storedLunch = localStorage.getItem(`nourish_lunch_${window.currentWeekKey}`);
+      window.lunchSchedule = storedLunch ? JSON.parse(storedLunch) : JSON.parse(JSON.stringify(DEFAULT_LUNCH_SCHEDULE));
+      
+      updateScheduleDateStrings(window.currentWeekKey);
+      renderPlanner();
+      renderLunchPlanner();
+      renderCatalog();
+      renderRecommendations();
+      renderGroceryList();
+    }
+
+    window.saveState = function() {
+      localStorage.setItem('nourish_meals_catalog', JSON.stringify(window.mealsCatalog));
+      localStorage.setItem(`nourish_schedule_${window.currentWeekKey}`, JSON.stringify(window.weeklySchedule));
+      localStorage.setItem(`nourish_lunch_${window.currentWeekKey}`, JSON.stringify(window.lunchSchedule));
+
+      if (currentUser && db) {
+        saveCatalogToCloud();
+        saveWeekToCloud();
+      }
+      renderGroceryList();
+      renderRecommendations();
+    };
+
+    function setupDates() {
+      const dateInput = document.getElementById('week-start-date');
+      if(!dateInput) return;
+
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sun
+      const sunday = new Date(today);
+      sunday.setDate(today.getDate() - dayOfWeek);
+      
+      const dateString = sunday.toISOString().split('T')[0];
+      dateInput.value = dateString;
+      window.currentWeekKey = dateString;
+    }
+
+    window.handleWeekDateChange = function(startDateVal) {
+      if(!startDateVal) return;
+      
+      const picked = new Date(startDateVal + "T00:00:00");
+      const day = picked.getDay();
+      picked.setDate(picked.getDate() - day);
+      
+      const sundayStr = picked.toISOString().split('T')[0];
+      document.getElementById('week-start-date').value = sundayStr;
+      
+      window.currentWeekKey = sundayStr;
+      if (currentUser && db) {
+        subscribeToWeekData(sundayStr);
+      } else {
+        loadFallbackLocalState();
+      }
+    };
+
+    function updateScheduleDateStrings(sundayDateStr) {
+      if (!sundayDateStr || !window.weeklySchedule) return;
+      const sunday = new Date(sundayDateStr + "T00:00:00");
+      
+      window.weeklySchedule.forEach((dayObj, i) => {
+        const d = new Date(sunday);
+        d.setDate(sunday.getDate() + i);
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
+        dayObj.dateStr = `${month}/${day}`;
+      });
+    }
+
+    window.switchTab = function(tabId) {
+      document.querySelectorAll('.view-panel').forEach(panel => panel.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('active', 'bg-white', 'text-slate-900', 'shadow-sm');
+        btn.classList.add('text-slate-600');
+      });
+
+      const activeView = document.getElementById(`view-${tabId}`);
+      if(activeView) activeView.classList.remove('hidden');
+
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      if(activeBtn) {
+        activeBtn.classList.add('active', 'bg-white', 'text-slate-900', 'shadow-sm');
+        activeBtn.classList.remove('text-slate-600');
+      }
+    };
+
+    window.renderPlanner = function() {
+      const grid = document.getElementById('weekly-days-grid');
+      if(!grid || !window.weeklySchedule) return;
+      grid.innerHTML = '';
+
+      window.weeklySchedule.forEach((dayData, idx) => {
+        const meal = (window.mealsCatalog || []).find(m => m.id === dayData.mealId);
+        const isSaturday = dayData.day === "Saturday";
+        const isSunday = dayData.day === "Sunday";
+        const isScottHome = dayData.scottHome !== false;
+        const hasSalad = dayData.includeSalad !== false;
+        const isLeftover = !!dayData.isLeftover;
+
+        const card = document.createElement('div');
+        card.className = `bg-white rounded-2xl border ${isSaturday ? 'border-amber-300 ring-2 ring-amber-100' : isSunday ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200/80'} p-3.5 shadow-sm flex flex-col justify-between space-y-3 min-w-0`;
+
+        card.innerHTML = `
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+              <span class="font-extrabold text-slate-900 text-sm">${dayData.day}</span>
+              <span class="text-xs font-bold text-slate-400">${dayData.dateStr || ''}</span>
+            </div>
+
+            <button onclick="toggleScottPresence(${idx})" class="w-full flex items-center justify-between font-bold px-2 py-1 rounded-xl transition text-xs ${isScottHome ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              <span class="flex items-center gap-1 truncate">
+                <i class="fa-solid ${isScottHome ? 'fa-user-check text-emerald-600' : 'fa-user-slash text-rose-500'}"></i>
+                <span>${isScottHome ? 'Scott Home' : 'Scott Away'}</span>
+              </span>
+              <span class="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-white/80 shrink-0">
+                ${isScottHome ? '3 Serv' : '2 Serv'}
+              </span>
+            </button>
+
+            <input type="text" value="${dayData.note || ''}" onchange="updateDayNote(${idx}, this.value)" 
+              placeholder="+ Add note" 
+              class="w-full text-xs font-medium text-amber-700 bg-amber-50/60 placeholder-amber-400 border border-amber-200/60 rounded-lg px-2 py-1 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500 truncate">
+
+            <div class="grid grid-cols-2 gap-1 text-[11px]">
+              <button onclick="toggleLeftover(${idx})" class="font-bold px-1.5 py-1 rounded-lg transition border flex items-center justify-center gap-1 text-center ${isLeftover ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}">
+                <i class="fa-solid fa-recycle"></i>
+                <span class="truncate">${isLeftover ? 'Leftover' : 'Flag Left'}</span>
+              </button>
+
+              <button onclick="toggleSideSalad(${idx})" class="font-bold px-1.5 py-1 rounded-lg transition border flex items-center justify-center gap-1 text-center ${hasSalad ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}">
+                <i class="fa-solid fa-carrot ${hasSalad ? 'text-emerald-600' : 'text-slate-300'}"></i>
+                <span class="truncate">${hasSalad ? 'Salad Side' : '+ Salad'}</span>
+              </button>
+            </div>
+
+            ${hasSalad ? `
+              <div class="text-[10px] text-emerald-800 bg-emerald-50/80 p-1.5 rounded-md border border-emerald-100 font-medium leading-tight">
+                🥗 Romaine, Tomatoes & Onion
+              </div>
+            ` : ''}
+
+            <div class="pt-1">
+              ${isLeftover ? `
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-center space-y-1">
+                  <span class="text-xs font-extrabold text-indigo-700 flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-box-archive"></i> Leftovers Night
+                  </span>
+                  <p class="text-[11px] text-indigo-600/90 leading-tight">Enjoy previous night's meal!</p>
+                </div>
+              ` : meal ? `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100/70 px-1.5 py-0.5 rounded truncate">${meal.category}</span>
+                    <button onclick="removeMealFromDay(${idx})" title="Remove Meal" class="text-slate-400 hover:text-rose-500 transition shrink-0 p-0.5">
+                      <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                  </div>
+                  <h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2">${meal.name}</h4>
+                  <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                    <span><i class="fa-regular fa-clock mr-1"></i>${meal.prepTime}</span>
+                    <span class="font-semibold text-emerald-600">${meal.kidApproval === 'High' ? '⭐ Picky Approved' : meal.kidApproval}</span>
+                  </div>
+                </div>
+              ` : `
+                <button onclick="openAssignModal(${idx})" class="w-full border-2 border-dashed border-slate-200 hover:border-orange-400 hover:bg-orange-50/50 rounded-xl p-3 text-slate-400 hover:text-orange-600 transition flex flex-col items-center justify-center space-y-1">
+                  <i class="fa-solid fa-plus text-xs"></i>
+                  <span class="text-xs font-bold">Assign Meal</span>
+                </button>
+              `}
+            </div>
+          </div>
+
+          ${!isLeftover && meal ? `
+            <button onclick="openAssignModal(${idx})" class="w-full text-xs font-bold text-slate-600 hover:text-orange-600 bg-slate-100 hover:bg-orange-50 py-1.5 rounded-lg transition mt-2">
+              Swap Meal
+            </button>
+          ` : ''}
+        `;
+        grid.appendChild(card);
+      });
+    };
+
+    window.toggleScottPresence = function(dayIdx) {
+      window.weeklySchedule[dayIdx].scottHome = !(window.weeklySchedule[dayIdx].scottHome !== false);
+      renderPlanner();
+      window.saveState();
+    };
+
+    window.toggleLeftover = function(dayIdx) {
+      const willBeLeftover = !window.weeklySchedule[dayIdx].isLeftover;
+      window.weeklySchedule[dayIdx].isLeftover = willBeLeftover;
+      if (willBeLeftover) {
+        window.weeklySchedule[dayIdx].mealId = null;
+      }
+      renderPlanner();
+      window.saveState();
+    };
+
+    window.toggleSideSalad = function(dayIdx) {
+      window.weeklySchedule[dayIdx].includeSalad = !(window.weeklySchedule[dayIdx].includeSalad !== false);
+      renderPlanner();
+      window.saveState();
+    };
+
+    window.updateDayNote = function(dayIdx, noteText) {
+      window.weeklySchedule[dayIdx].note = noteText;
+      window.saveState();
+    };
+
+    window.removeMealFromDay = function(dayIdx) {
+      window.weeklySchedule[dayIdx].mealId = null;
+      renderPlanner();
+      window.saveState();
+    };
+
+    window.openAssignModal = function(dayIdx) {
+      window.activeDayIndexForAssign = dayIdx;
+      const modal = document.getElementById('modal-assign');
+      const title = document.getElementById('assign-modal-day-title');
+      if(title && window.weeklySchedule[dayIdx]) {
+        title.innerText = `Select Dinner for ${window.weeklySchedule[dayIdx].day}`;
+      }
+      document.getElementById('assign-modal-search').value = '';
+      filterAssignMeals();
+      modal.classList.remove('hidden');
+    };
+
+    window.closeAssignModal = function() {
+      document.getElementById('modal-assign').classList.add('hidden');
+      window.activeDayIndexForAssign = null;
+    };
+
+    window.filterAssignMeals = function() {
+      const query = document.getElementById('assign-modal-search').value.toLowerCase();
+      const listContainer = document.getElementById('assign-modal-list');
+      listContainer.innerHTML = '';
+
+      const filtered = (window.mealsCatalog || []).filter(m => m.name.toLowerCase().includes(query) || m.category.toLowerCase().includes(query));
+
+      filtered.forEach(meal => {
+        const item = document.createElement('div');
+        item.className = "p-3 border border-slate-200 rounded-xl hover:border-orange-400 hover:bg-orange-50/50 cursor-pointer transition flex items-center justify-between";
+        item.onclick = () => selectMealForActiveDay(meal.id);
+
+        item.innerHTML = `
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-slate-900 text-sm">${meal.name}</span>
+              <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">${meal.category}</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">${meal.notes || meal.prepTime}</p>
+          </div>
+          <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2.5 py-1 rounded-lg">Select</span>
+        `;
+        listContainer.appendChild(item);
+      });
+    };
+
+    function selectMealForActiveDay(mealId) {
+      if(window.activeDayIndexForAssign !== null) {
+        window.weeklySchedule[window.activeDayIndexForAssign].mealId = mealId;
+        window.weeklySchedule[window.activeDayIndexForAssign].isLeftover = false;
+        window.saveState();
+        renderPlanner();
+        closeAssignModal();
+      }
+    }
+
+    window.renderLunchPlanner = function() {
+      const grid = document.getElementById('lunch-days-grid');
+      if(!grid || !window.lunchSchedule) return;
+      grid.innerHTML = '';
+
+      const mains = ["Turkey Sandwich", "Ham Sandwich", "PB & J", "Cheese Quesadilla", "Dinner Leftovers 🍱"];
+      const fruits = ["Sliced Apples", "Strawberries", "Grapes", "Watermelon", "Banana"];
+      const snacks = ["Goldfish", "Pretzels", "Granola Bar", "Chips", "Fruit Snacks"];
+
+      window.lunchSchedule.forEach((lunch, idx) => {
+        const card = document.createElement('div');
+        const isLeftovers = lunch.isLeftover || lunch.main.includes("Leftovers");
+        card.className = `bg-white rounded-2xl border ${isLeftovers ? 'border-indigo-200 bg-indigo-50/20' : 'border-slate-200/80'} p-4 shadow-sm flex flex-col justify-between space-y-3`;
+
+        const hasLettuce = lunch.toppings && lunch.toppings.includes("Lettuce");
+        const hasTomato = lunch.toppings && lunch.toppings.includes("Tomato");
+        const hasMayo = lunch.condiments && lunch.condiments.includes("Mayo");
+        const hasMustard = lunch.condiments && lunch.condiments.includes("Mustard");
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+              <span class="font-bold text-slate-900">${lunch.day}</span>
+              <span class="text-xs font-semibold ${isLeftovers ? 'text-indigo-600 bg-indigo-100' : 'text-rose-500 bg-rose-50'} px-2 py-0.5 rounded-md flex items-center gap-1">
+                <i class="fa-solid ${isLeftovers ? 'fa-box-archive' : 'fa-school'} text-[10px]"></i>
+                ${isLeftovers ? 'Leftovers Lunch' : 'School Lunch'}
+              </span>
+            </div>
+
+            <button onclick="toggleLunchLeftovers(${idx})" class="w-full mb-2.5 text-xs font-bold px-2.5 py-1.5 rounded-xl transition border flex items-center justify-center gap-1.5 ${isLeftovers ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600'}">
+              <i class="fa-solid fa-box-archive"></i>
+              ${isLeftovers ? 'Using Dinner Leftovers' : 'Flag as Dinner Leftovers'}
+            </button>
+
+            <div class="space-y-2">
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Main Entree</label>
+                <select onchange="updateLunchItem(${idx}, 'main', this.value)" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1.5 font-bold text-slate-800">
+                  ${mains.map(m => `<option value="${m}" ${lunch.main === m ? 'selected' : ''}>${m}</option>`).join('')}
+                </select>
+              </div>
+
+              ${lunch.main.includes("Sandwich") ? `
+              <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sandwich Fixings</span>
+                <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-700">
+                  <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" ${hasLettuce ? 'checked' : ''} onchange="toggleLunchTopping(${idx}, 'Lettuce')" class="rounded text-rose-500 w-3 h-3">
+                    <span>Lettuce</span>
+                  </label>
+                  <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" ${hasTomato ? 'checked' : ''} onchange="toggleLunchTopping(${idx}, 'Tomato')" class="rounded text-rose-500 w-3 h-3">
+                    <span>Tomato</span>
+                  </label>
+                  <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" ${hasMayo ? 'checked' : ''} onchange="toggleLunchCondiment(${idx}, 'Mayo')" class="rounded text-rose-500 w-3 h-3">
+                    <span>Mayo</span>
+                  </label>
+                  <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" ${hasMustard ? 'checked' : ''} onchange="toggleLunchCondiment(${idx}, 'Mustard')" class="rounded text-rose-500 w-3 h-3">
+                    <span>Mustard</span>
+                  </label>
+                </div>
+              </div>` : ''}
+
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Fresh Fruit Side</label>
+                <select onchange="updateLunchItem(${idx}, 'fruit', this.value)" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1.5 font-semibold text-slate-700">
+                  ${fruits.map(f => `<option value="${f}" ${lunch.fruit === f ? 'selected' : ''}>🍓 ${f}</option>`).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Snack / Side</label>
+                <select onchange="updateLunchItem(${idx}, 'snack', this.value)" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg px-2 py-1.5 font-semibold text-slate-700">
+                  ${snacks.map(s => `<option value="${s}" ${lunch.snack === s ? 'selected' : ''}>🥨 ${s}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    };
+
+    window.toggleLunchLeftovers = function(dayIdx) {
+      const isLeftovers = !(window.lunchSchedule[dayIdx].isLeftover || window.lunchSchedule[dayIdx].main.includes("Leftovers"));
+      window.lunchSchedule[dayIdx].isLeftover = isLeftovers;
+      window.lunchSchedule[dayIdx].main = isLeftovers ? "Dinner Leftovers 🍱" : "Turkey Sandwich";
+      renderLunchPlanner();
+      window.saveState();
+    };
+
+    window.updateLunchItem = function(dayIdx, field, value) {
+      window.lunchSchedule[dayIdx][field] = value;
+      if (field === 'main') {
+        window.lunchSchedule[dayIdx].isLeftover = value.includes("Leftovers");
+      }
+      renderLunchPlanner();
+      window.saveState();
+    };
+
+    window.toggleLunchTopping = function(dayIdx, topping) {
+      const toppings = window.lunchSchedule[dayIdx].toppings;
+      const index = toppings.indexOf(topping);
+      if (index > -1) toppings.splice(index, 1);
+      else toppings.push(topping);
+      window.saveState();
+    };
+
+    window.toggleLunchCondiment = function(dayIdx, condiment) {
+      const condiments = window.lunchSchedule[dayIdx].condiments;
+      const index = condiments.indexOf(condiment);
+      if (index > -1) condiments.splice(index, 1);
+      else condiments.push(condiment);
+      window.saveState();
+    };
+
+    window.clearCurrentWeek = function() {
+      window.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
+      updateScheduleDateStrings(window.currentWeekKey);
+      renderPlanner();
+      window.saveState();
+    };
+
+    window.openCustomGroceryModal = function() {
+      const catSelect = document.getElementById('custom-grocery-category');
+      if (catSelect) {
+        catSelect.innerHTML = `
+          <option value="Produce (Right Side Entrance)">1. Produce (Right Entrance)</option>
+          <option value="Deli, Bakery & Fresh Prep">2. Deli, Bakery & Prepared</option>
+          <option value="Meat & Seafood (Back Wall)">3. Meat & Seafood (Back Wall)</option>
+          <option value="Pantry & Center Store Aisles">4. Pantry & Center Store Aisles</option>
+          <option value="Dairy & Chilled">5. Dairy & Refrigerated</option>
+          <option value="Household, Health & Staples">6. Household & Staples</option>
+          <option value="Frozen Foods (End of Store)">7. Frozen Foods (Last Stop)</option>
+        `;
+      }
+      document.getElementById('custom-grocery-name').value = '';
+      document.getElementById('modal-custom-grocery').classList.remove('hidden');
+    };
+
+    window.closeCustomGroceryModal = function() {
+      document.getElementById('modal-custom-grocery').classList.add('hidden');
+    };
+
+    window.addCustomGroceryItem = function() {
+      const name = document.getElementById('custom-grocery-name').value.trim();
+      const category = document.getElementById('custom-grocery-category').value;
+
+      if (name) {
+        window.customGroceryItems.push({ name, category });
+        window.saveState();
+        closeCustomGroceryModal();
+      }
+    };
+
+    window.renderGroceryList = function() {
+      const storeOrder = [
+        "Produce (Right Side Entrance)",
+        "Deli, Bakery & Fresh Prep",
+        "Meat & Seafood (Back Wall)",
+        "Pantry & Center Store Aisles",
+        "Dairy & Chilled",
+        "Household, Health & Staples",
+        "Frozen Foods (End of Store)"
+      ];
+
+      function mapToStoreSection(cat) {
+        if (!cat) return "Pantry & Center Store Aisles";
+        const lower = cat.toLowerCase();
+        if (lower.includes("produce")) return "Produce (Right Side Entrance)";
+        if (lower.includes("bakery") || lower.includes("deli")) return "Deli, Bakery & Fresh Prep";
+        if (lower.includes("meat") || lower.includes("seafood")) return "Meat & Seafood (Back Wall)";
+        if (lower.includes("dairy") || lower.includes("refrigerated") || lower.includes("chilled")) return "Dairy & Chilled";
+        if (lower.includes("household") || lower.includes("health") || lower.includes("staples")) return "Household, Health & Staples";
+        if (lower.includes("frozen")) return "Frozen Foods (End of Store)";
+        return "Pantry & Center Store Aisles";
+      }
+
+      const consolidated = {};
+      storeOrder.forEach(sec => consolidated[sec] = []);
+
+      (window.weeklySchedule || []).forEach(day => {
+        if (day.mealId && !day.isLeftover) {
+          const meal = (window.mealsCatalog || []).find(m => m.id === day.mealId);
+          if (meal && meal.ingredients) {
+            meal.ingredients.forEach(ing => {
+              const sec = mapToStoreSection(ing.category);
+              const existing = consolidated[sec].find(item => item.name.toLowerCase() === ing.name.toLowerCase());
+              if (existing) {
+                if (!existing.sourceMeals.includes(meal.name)) existing.sourceMeals.push(meal.name);
+              } else {
+                consolidated[sec].push({
+                  name: ing.name,
+                  amount: ing.amount,
+                  sourceMeals: [meal.name]
+                });
+              }
+            });
+          }
+
+          if (day.includeSalad !== false) {
+            SIDE_SALAD_INGREDIENTS.forEach(saladItem => {
+              const sec = mapToStoreSection(saladItem.category);
+              const existing = consolidated[sec].find(item => item.name.toLowerCase() === saladItem.name.toLowerCase());
+              const label = `Salad Side (${day.day})`;
+              if (existing) {
+                if (!existing.sourceMeals.includes(label)) existing.sourceMeals.push(label);
+              } else {
+                consolidated[sec].push({
+                  name: saladItem.name,
+                  amount: saladItem.amount,
+                  sourceMeals: [label]
+                });
+              }
+            });
+          }
+        }
+      });
+
+      (window.lunchSchedule || []).forEach(lunch => {
+        const sourceLabel = `Daughter's Lunch (${lunch.day})`;
+
+        if (lunch.main === "Turkey Sandwich") {
+          addLunchGroceryItemStoreFlow(consolidated, "Deli Turkey Breast", "Deli / Meat", "Meat & Seafood (Back Wall)", sourceLabel);
+          addLunchGroceryItemStoreFlow(consolidated, "Sandwich Bread", "1 loaf", "Deli, Bakery & Fresh Prep", sourceLabel);
+        } else if (lunch.main === "Ham Sandwich") {
+          addLunchGroceryItemStoreFlow(consolidated, "Deli Ham", "Deli / Meat", "Meat & Seafood (Back Wall)", sourceLabel);
+          addLunchGroceryItemStoreFlow(consolidated, "Sandwich Bread", "1 loaf", "Deli, Bakery & Fresh Prep", sourceLabel);
+        } else if (lunch.main === "PB & J") {
+          addLunchGroceryItemStoreFlow(consolidated, "Peanut Butter & Jelly", "Jar", "Pantry & Center Store Aisles", sourceLabel);
+          addLunchGroceryItemStoreFlow(consolidated, "Sandwich Bread", "1 loaf", "Deli, Bakery & Fresh Prep", sourceLabel);
+        } else if (lunch.main === "Cheese Quesadilla") {
+          addLunchGroceryItemStoreFlow(consolidated, "Flour Tortillas & Shredded Cheese", "1 pack", "Dairy & Chilled", sourceLabel);
+        }
+
+        if (lunch.main.includes("Sandwich")) {
+          if (lunch.toppings.includes("Lettuce")) addLunchGroceryItemStoreFlow(consolidated, "Fresh Sandwich Lettuce", "1 head", "Produce (Right Side Entrance)", sourceLabel);
+          if (lunch.toppings.includes("Tomato")) addLunchGroceryItemStoreFlow(consolidated, "Fresh Tomatoes", "2-3", "Produce (Right Side Entrance)", sourceLabel);
+          if (lunch.condiments.includes("Mayo")) addLunchGroceryItemStoreFlow(consolidated, "Mayonnaise", "1 jar", "Pantry & Center Store Aisles", sourceLabel);
+          if (lunch.condiments.includes("Mustard")) addLunchGroceryItemStoreFlow(consolidated, "Mustard", "1 bottle", "Pantry & Center Store Aisles", sourceLabel);
+        }
+
+        if (lunch.fruit) addLunchGroceryItemStoreFlow(consolidated, lunch.fruit, "Fresh Produce", "Produce (Right Side Entrance)", sourceLabel);
+        if (lunch.snack) addLunchGroceryItemStoreFlow(consolidated, lunch.snack, "1 box/bag", "Pantry & Center Store Aisles", sourceLabel);
+      });
+
+      (window.customGroceryItems || []).forEach(item => {
+        const sec = mapToStoreSection(item.category);
+        consolidated[sec].push({
+          name: item.name,
+          amount: "",
+          sourceMeals: ["Custom Item"]
+        });
+      });
+
+      let totalItems = 0;
+      Object.values(consolidated).forEach(arr => totalItems += arr.length);
+      const badge = document.getElementById('grocery-count-badge');
+      if (badge) badge.innerText = totalItems;
+
+      const container = document.getElementById('grocery-aisles-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (totalItems === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200/80">
+            <i class="fa-solid fa-basket-shopping text-4xl text-slate-300 mb-3 block"></i>
+            <h3 class="font-bold text-slate-700 text-lg">Your Grocery List is Empty</h3>
+            <p class="text-xs text-slate-400 mt-1">Assign meals or configure lunches to auto-generate your list.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let stepNumber = 1;
+      storeOrder.forEach(sec => {
+        const items = consolidated[sec];
+        if (items.length === 0) return;
+
+        const aisleCard = document.createElement('div');
+        aisleCard.className = "bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3";
+
+        let categoryIcon = "fa-layer-group text-slate-500";
+        if (sec.includes("Produce")) categoryIcon = "fa-carrot text-emerald-500";
+        if (sec.includes("Deli")) categoryIcon = "fa-bread-slice text-amber-600";
+        if (sec.includes("Meat")) categoryIcon = "fa-drumstick-bite text-rose-500";
+        if (sec.includes("Pantry")) categoryIcon = "fa-box text-orange-500";
+        if (sec.includes("Dairy")) categoryIcon = "fa-cheese text-amber-500";
+        if (sec.includes("Frozen")) categoryIcon = "fa-snowflake text-sky-500";
+        if (sec.includes("Household")) categoryIcon = "fa-pump-soap text-indigo-500";
+
+        const itemsHTML = items.map(item => {
+          const itemKey = `${sec}_${item.name.toLowerCase()}`;
+          const isChecked = !!(window.groceryCheckedMap || {})[itemKey];
+
+          return `
+            <label class="flex items-start space-x-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition select-none group">
+              <input type="checkbox" onchange="toggleGroceryCheck('${itemKey}')" ${isChecked ? 'checked' : ''} class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold ${isChecked ? 'line-through text-slate-400' : 'text-slate-800'}">${item.name}</span>
+                  ${item.amount ? `<span class="text-xs font-bold text-slate-400 ml-2">${item.amount}</span>` : ''}
+                </div>
+                <div class="text-[10px] text-slate-400 truncate">For: ${item.sourceMeals.join(', ')}</div>
+              </div>
+            </label>
+          `;
+        }).join('');
+
+        aisleCard.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-black flex items-center justify-center">${stepNumber}</span>
+              <i class="fa-solid ${categoryIcon}"></i> ${sec}
+            </h3>
+            <span class="text-xs font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${items.length}</span>
+          </div>
+          <div class="space-y-1">
+            ${itemsHTML}
+          </div>
+        `;
+
+        container.appendChild(aisleCard);
+        stepNumber++;
+      });
+    };
+
+    function addLunchGroceryItemStoreFlow(consolidated, name, amount, targetSec, sourceMeal) {
+      const secKey = consolidated[targetSec] ? targetSec : "Pantry & Center Store Aisles";
+      const existing = consolidated[secKey].find(item => item.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        if (!existing.sourceMeals.includes(sourceMeal)) existing.sourceMeals.push(sourceMeal);
+      } else {
+        consolidated[secKey].push({
+          name: name,
+          amount: amount,
+          sourceMeals: [sourceMeal]
+        });
+      }
+    }
+
+    window.renderRecommendations = function() {
+      const plannedMealIds = (window.weeklySchedule || []).map(s => s.mealId).filter(Boolean);
+
+      const comfortMeals = (window.mealsCatalog || []).filter(m => m.isPastFavorite && !plannedMealIds.includes(m.id)).slice(0, 4);
+      const comfortList = document.getElementById('rec-comfort-list');
+      if (comfortList) {
+        comfortList.innerHTML = comfortMeals.map(m => createRecCardHTML(m, 'Past Favorite')).join('');
+      }
+
+      const spinoffs = (window.mealsCatalog || []).filter(m => m.isSpinOff && !plannedMealIds.includes(m.id)).slice(0, 4);
+      const spinoffsList = document.getElementById('rec-spinoffs-list');
+      if (spinoffsList) {
+        spinoffsList.innerHTML = spinoffs.map(m => createRecCardHTML(m, `Inspired by ${m.inspiredBy || 'past meals'}`)).join('');
+      }
+
+      const quickMeals = (window.mealsCatalog || []).filter(m => {
+        const mins = parseInt(m.prepTime) || 30;
+        return mins <= 25 && !plannedMealIds.includes(m.id);
+      }).slice(0, 4);
+      const quickList = document.getElementById('rec-quick-list');
+      if (quickList) {
+        quickList.innerHTML = quickMeals.map(m => createRecCardHTML(m, `${m.prepTime} Quick Cook`)).join('');
+      }
+    };
+
+    function createRecCardHTML(meal, subtitle) {
+      return `
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-3 hover:border-orange-300 transition">
+          <div>
+            <div class="flex items-center justify-between text-xs text-slate-400 font-medium mb-1">
+              <span>${subtitle}</span>
+              <span class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">${meal.kidApproval === 'High' ? '⭐ Daughter Favorite' : meal.kidApproval}</span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">${meal.name}</h4>
+            <p class="text-xs text-slate-500 mt-1 line-clamp-2">${meal.notes || 'Delicious family favorite.'}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-50">
+            <span class="text-xs font-semibold text-slate-500"><i class="fa-regular fa-clock mr-1"></i>${meal.prepTime}</span>
+            <button onclick="quickAddRecToFirstOpenDay('${meal.id}')" class="text-xs bg-orange-50 hover:bg-orange-500 text-orange-600 hover:text-white font-bold px-2.5 py-1.5 rounded-lg transition">
+              + Plan This Week
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    window.quickAddRecToFirstOpenDay = function(mealId) {
+      const openSlot = window.weeklySchedule.find(s => !s.mealId && !s.isLeftover);
+      if(openSlot) {
+        openSlot.mealId = mealId;
+        renderPlanner();
+        window.saveState();
+      }
+    };
+
+    window.renderCatalog = function() {
+      const searchInput = document.getElementById('catalog-search');
+      const catFilterInput = document.getElementById('catalog-filter-category');
+      const kidFilterInput = document.getElementById('catalog-filter-kid');
+      const grid = document.getElementById('catalog-grid');
+
+      if (!grid) return;
+
+      const search = searchInput ? searchInput.value.toLowerCase() : '';
+      const catFilter = catFilterInput ? catFilterInput.value : 'ALL';
+      const kidFilter = kidFilterInput ? kidFilterInput.value : 'ALL';
+
+      grid.innerHTML = '';
+
+      const filtered = (window.mealsCatalog || []).filter(m => {
+        const matchesSearch = m.name.toLowerCase().includes(search) || 
+                              (m.ingredients && m.ingredients.some(i => i.name.toLowerCase().includes(search)));
+        const matchesCat = catFilter === 'ALL' || m.category === catFilter;
+        const matchesKid = kidFilter === 'ALL' || m.kidApproval === kidFilter;
+
+        return matchesSearch && matchesCat && matchesKid;
+      });
+
+      filtered.forEach(meal => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition";
+
+        const kidBadgeClass = meal.kidApproval === 'High' ? 'bg-emerald-100 text-emerald-800' :
+                              meal.kidApproval === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+
+        const ings = meal.ingredients || [];
+        const ingredientsPreview = ings.slice(0, 4).map(i => `<span class="inline-block bg-slate-100 text-slate-600 text-[11px] px-2 py-0.5 rounded-md font-medium mr-1 mb-1">${i.name}</span>`).join('');
+        const extraCount = ings.length > 4 ? `<span class="text-[11px] text-slate-400 font-medium">+${ings.length - 4} more</span>` : '';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between">
+              <span class="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-100 px-2.5 py-0.5 rounded-lg">${meal.category}</span>
+              <span class="text-xs font-bold ${kidBadgeClass} px-2 py-0.5 rounded-lg">${meal.kidApproval === 'High' ? '⭐ Picky Approved' : meal.kidApproval}</span>
+            </div>
+
+            <h3 class="font-bold text-slate-900 text-base mt-2.5">${meal.name}</h3>
+            ${meal.notes ? `<p class="text-xs text-slate-500 mt-1 italic">${meal.notes}</p>` : ''}
+
+            <div class="mt-3">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Ingredients</span>
+              <div>${ingredientsPreview}${extraCount}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+            <span class="text-xs font-semibold text-slate-500"><i class="fa-regular fa-clock mr-1"></i>${meal.prepTime}</span>
+            <button onclick="openMealModal('${meal.id}')" class="text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-xl transition">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> Edit Ingredients
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    };
+
+    window.openMealModal = function(mealId = null) {
+      const modal = document.getElementById('modal-meal');
+      const deleteBtn = document.getElementById('modal-meal-delete-btn');
+      const container = document.getElementById('modal-ingredients-container');
+      container.innerHTML = '';
+
+      if (mealId) {
+        const meal = window.mealsCatalog.find(m => m.id === mealId);
+        document.getElementById('modal-meal-title').innerText = "Edit Meal & Ingredients";
+        document.getElementById('meal-edit-id').value = meal.id;
+        document.getElementById('meal-input-name').value = meal.name;
+        document.getElementById('meal-input-category').value = meal.category;
+        document.getElementById('meal-input-kid').value = meal.kidApproval;
+        document.getElementById('meal-input-time').value = meal.prepTime;
+        document.getElementById('meal-input-notes').value = meal.notes || '';
+        deleteBtn.classList.remove('hidden');
+
+        (meal.ingredients || []).forEach(ing => addIngredientRow(ing.name, ing.amount, ing.category));
+      } else {
+        document.getElementById('modal-meal-title').innerText = "Add New Meal";
+        document.getElementById('meal-edit-id').value = '';
+        document.getElementById('meal-input-name').value = '';
+        document.getElementById('meal-input-category').value = 'Chicken & Bowls';
+        document.getElementById('meal-input-kid').value = 'High';
+        document.getElementById('meal-input-time').value = '25 mins';
+        document.getElementById('meal-input-notes').value = '';
+        deleteBtn.classList.add('hidden');
+
+        addIngredientRow();
+        addIngredientRow();
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    window.closeMealModal = function() {
+      document.getElementById('modal-meal').classList.add('hidden');
+    };
+
+    window.addIngredientRow = function(name = '', amount = '', category = 'Produce') {
+      const container = document.getElementById('modal-ingredients-container');
+      const row = document.createElement('div');
+      row.className = "flex items-center space-x-2 ing-row";
+      row.innerHTML = `
+        <input type="text" placeholder="Item name (e.g. Chicken)" value="${name}" class="ing-name flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+        <input type="text" placeholder="Amount (e.g. 1.5 lbs)" value="${amount}" class="ing-amount w-28 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+        <select class="ing-cat px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+          <option value="Produce" ${category === 'Produce' ? 'selected' : ''}>Produce</option>
+          <option value="Meat & Seafood" ${category === 'Meat & Seafood' ? 'selected' : ''}>Meat</option>
+          <option value="Dairy & Refrigerated" ${category === 'Dairy & Refrigerated' ? 'selected' : ''}>Dairy</option>
+          <option value="Pantry & Spices" ${category === 'Pantry & Spices' ? 'selected' : ''}>Pantry</option>
+          <option value="Bakery" ${category === 'Bakery' ? 'selected' : ''}>Bakery</option>
+          <option value="Frozen" ${category === 'Frozen' ? 'selected' : ''}>Frozen</option>
+        </select>
+        <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-rose-500 p-1">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
+      `;
+      container.appendChild(row);
+    };
+
+    window.saveMealFromModal = function() {
+      const id = document.getElementById('meal-edit-id').value;
+      const name = document.getElementById('meal-input-name').value.trim();
+
+      if (!name) return;
+
+      const ingRows = document.querySelectorAll('.ing-row');
+      const ingredients = [];
+      ingRows.forEach(row => {
+        const ingName = row.querySelector('.ing-name').value.trim();
+        const ingAmt = row.querySelector('.ing-amount').value.trim();
+        const ingCat = row.querySelector('.ing-cat').value;
+        if(ingName) {
+          ingredients.push({ name: ingName, amount: ingAmt || '1', category: ingCat });
+        }
+      });
+
+      const mealData = {
+        id: id || 'm_' + Date.now(),
+        name: name,
+        category: document.getElementById('meal-input-category').value,
+        kidApproval: document.getElementById('meal-input-kid').value,
+        prepTime: document.getElementById('meal-input-time').value || '25 mins',
+        notes: document.getElementById('meal-input-notes').value,
+        ingredients: ingredients
+      };
+
+      if (id) {
+        const index = window.mealsCatalog.findIndex(m => m.id === id);
+        if (index !== -1) {
+          window.mealsCatalog[index] = { ...window.mealsCatalog[index], ...mealData };
+        } else {
+          window.mealsCatalog.unshift(mealData);
+        }
+      } else {
+        window.mealsCatalog.unshift(mealData);
+      }
+
+      window.saveState();
+      renderCatalog();
+      renderPlanner();
+      closeMealModal();
+    };
+
+    window.deleteCurrentMeal = function() {
+      const id = document.getElementById('meal-edit-id').value;
+      if (id) {
+        window.mealsCatalog = window.mealsCatalog.filter(m => m.id !== id);
+        (window.weeklySchedule || []).forEach(slot => {
+          if (slot.mealId === id) slot.mealId = null;
+        });
+        window.saveState();
+        renderCatalog();
+        renderPlanner();
+        closeMealModal();
+      }
+    };
+
+    window.toggleGroceryCheck = function(itemKey) {
+      window.groceryCheckedMap[itemKey] = !window.groceryCheckedMap[itemKey];
+      window.saveState();
+    };
+
+    window.clearCheckedGrocery = function() {
+      window.groceryCheckedMap = {};
+      window.saveState();
+    };
+
+    window.printGroceryList = function() {
+      window.print();
+    };
+
+    // Initialize application
+    window.onload = function() {
+      initAuthAndData();
+    };
+  </script>
+</body>
+</html>
