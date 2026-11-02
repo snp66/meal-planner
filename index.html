@@ -70,7 +70,7 @@
         </div>
 
         <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-          <button onclick="clearCurrentWeek()" class="text-xs font-bold text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+          <button onclick="openResetWeekModal()" class="text-xs font-bold text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
             <i class="fa-solid fa-rotate-left"></i> Reset Week
           </button>
           <button onclick="switchTab('grocery')" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-1.5">
@@ -319,6 +319,27 @@
         </button>
         <button onclick="addCustomGroceryItem()" type="button" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl transition shadow-sm">
           Add to List
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM RESET WEEK -->
+  <div id="modal-confirm-reset" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl space-y-4 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="font-extrabold text-slate-900 text-base">Reset Current Week?</h3>
+        <p class="text-xs text-slate-500 mt-1">This will clear assigned meals, notes, and leftover flags for this specific week. Your recipe catalog will NOT be affected.</p>
+      </div>
+      <div class="flex items-center justify-center space-x-2 pt-2">
+        <button onclick="closeResetWeekModal()" type="button" class="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition">
+          Cancel
+        </button>
+        <button onclick="confirmClearCurrentWeek()" type="button" class="text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 px-4 py-2.5 rounded-xl transition shadow-sm">
+          Yes, Reset Week
         </button>
       </div>
     </div>
@@ -1000,11 +1021,24 @@
       window.saveState();
     };
 
-    window.clearCurrentWeek = function() {
+    window.openResetWeekModal = function() {
+      document.getElementById('modal-confirm-reset').classList.remove('hidden');
+    };
+
+    window.closeResetWeekModal = function() {
+      document.getElementById('modal-confirm-reset').classList.add('hidden');
+    };
+
+    window.confirmClearCurrentWeek = function() {
       window.weeklySchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE_TEMPLATE));
       updateScheduleDateStrings(window.currentWeekKey);
       renderPlanner();
       window.saveState();
+      closeResetWeekModal();
+    };
+
+    window.clearCurrentWeek = function() {
+      window.openResetWeekModal();
     };
 
     window.openCustomGroceryModal = function() {
